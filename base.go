@@ -25,8 +25,8 @@ type DBModel interface {
 	GetItemsWithDFilters(query QueryModel) (items interface{}, err errorslib.ErrorModel)
 	GetItem(query QueryModel) (item interface{}, err errorslib.ErrorModel)
 
-	Sum(query QueryModel, key string) (*decimal.Decimal, errorslib.ErrorModel)
-	SumWithDFilters(query QueryModel, key string) (*decimal.Decimal, errorslib.ErrorModel)
+	Sum(query QueryModel, key string) (decimal.Decimal, errorslib.ErrorModel)
+	SumWithDFilters(query QueryModel, key string) (decimal.Decimal, errorslib.ErrorModel)
 
 	Upsert(query QueryModel) (err errorslib.ErrorModel)
 	Update(query QueryModel) (err errorslib.ErrorModel)
