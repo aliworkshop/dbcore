@@ -1,0 +1,6 @@
+github.com/aliworkshop/dfilterlib v1.0.0 h1:x1OvuJCxcJyUQCCWR0LfE+NyIEzHnCZsKfdZLBr7RN8=
+github.com/aliworkshop/dfilterlib v1.0.0/go.mod h1:i1N4iTtQV1Y7xeXyp+plDVubepH/maE6X0FZNU9FU9w=
+github.com/aliworkshop/errorslib v1.0.0 h1:USO/UZFL8x8tmCCxQ8xjWICG7n5gRBxNOEpfvq9o6g8=
+github.com/aliworkshop/errorslib v1.0.0/go.mod h1:jYW96Mz3yKbkk9NU7UE9EALknkiGeam0QSKZY582Y+c=
+github.com/shopspring/decimal v1.3.1 h1:2Usl1nmF/WZucqkFZhnfFYxxxu8LG21F6nPQBE5gKV8=
+github.com/shopspring/decimal v1.3.1/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=
