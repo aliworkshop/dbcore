@@ -45,7 +45,7 @@ type DBModel interface {
 }
 
 func GetItems(repo DBModel, query QueryModel) (interface{}, errorslib.ErrorModel) {
-	if query.GetModels() == nil {
+	if query.GetModel() == nil {
 		return nil, errorslib.New().WithType(errorslib.TypeValidation).WithDetail("model is not set in query model")
 	}
 	err := validatePagination(query)

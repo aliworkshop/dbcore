@@ -22,10 +22,8 @@ type QueryModel interface {
 	WithJoin(query string, args ...interface{}) QueryModel
 	AddExtraAction(key string, action interface{})
 	// TODO: check if thread-safe or not
-	GetModel() (instance interface{})
-	GetModels() (instance interface{})
-	SetModelFunc(func() interface{})
-	SetModelsFunc(func() interface{})
+	GetModel() (instance Modeler)
+	SetModelFunc(func() Modeler)
 	SetTransaction(transaction interface{})
 	GetTransaction() (transaction interface{})
 	SetPageSize(pageSize int)
@@ -35,8 +33,7 @@ type QueryModel interface {
 	GetJoin() []join
 	GetExtraActions() map[string]interface{}
 	// with
-	WithModelFunc(func() interface{}) QueryModel
-	WithModelsFunc(func() interface{}) QueryModel
+	WithModelFunc(func() Modeler) QueryModel
 	WithBody(body interface{}) QueryModel
 	WithExtraFilter(query string, params ...interface{}) QueryModel
 	WithPage(page int) QueryModel
@@ -68,9 +65,9 @@ var (
 	DefaultPageSize = 30
 )
 
-type ModelFunc func() interface{}
+type ModelFunc func() Modeler
 
-var defaultModelFunc ModelFunc = func() interface{} {
+var defaultModelFunc ModelFunc = func() Modeler {
 	return nil
 }
 
@@ -210,20 +207,12 @@ func (q *query) GetJoin() []join {
 	return q.joins
 }
 
-func (q *query) GetModel() (instance interface{}) {
+func (q *query) GetModel() (instance Modeler) {
 	return q.modelFunc()
 }
 
-func (q *query) GetModels() (instance interface{}) {
-	return q.modelsFunc()
-}
-
-func (q *query) SetModelFunc(modelFunc func() interface{}) {
+func (q *query) SetModelFunc(modelFunc func() Modeler) {
 	q.modelFunc = modelFunc
-}
-
-func (q *query) SetModelsFunc(modelsFunc func() interface{}) {
-	q.modelsFunc = modelsFunc
 }
 
 func (q *query) SetTransaction(transaction interface{}) {
@@ -283,13 +272,8 @@ func (q *query) GetExtraActions() map[string]interface{} {
 
 // with
 
-func (q *query) WithModelFunc(f func() interface{}) QueryModel {
+func (q *query) WithModelFunc(f func() Modeler) QueryModel {
 	q.SetModelFunc(f)
-	return q
-}
-
-func (q *query) WithModelsFunc(f func() interface{}) QueryModel {
-	q.SetModelsFunc(f)
 	return q
 }
 
