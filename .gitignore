@@ -17,6 +17,7 @@
 .vscode/%
 .idea
 temp
+.idea
 
 # environment
 .env0
