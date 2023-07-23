@@ -1,6 +1,6 @@
 package dbcore
 
-import "github.com/aliworkshop/dfilterlib"
+import "github.com/aliworkshop/dfilter"
 
 type QueryModel interface {
 	// SetDB set custom db to query to use in further methods of db handler
@@ -21,7 +21,6 @@ type QueryModel interface {
 	GetExtraFilters() []ExtraFilter
 	WithJoin(query string, args ...interface{}) QueryModel
 	AddExtraAction(key string, action interface{})
-	// TODO: check if thread-safe or not
 	GetModel() (instance Modeler)
 	SetModelFunc(func() Modeler)
 	SetTransaction(transaction interface{})
@@ -39,8 +38,8 @@ type QueryModel interface {
 	WithPage(page int) QueryModel
 	WithPageSize(pageSize int) QueryModel
 	WithFilter(key string, value interface{}) QueryModel
-	WithDynamicFilters([]dfilterlib.Filter) QueryModel
-	GetDynamicFilters() []dfilterlib.Filter
+	WithDynamicFilters([]dfilter.Filter) QueryModel
+	GetDynamicFilters() []dfilter.Filter
 	WithSort(field string, order order) QueryModel
 	WithSorts(sort ...SortItem) QueryModel
 	// Clone copy current query as new instance of query model
@@ -74,7 +73,7 @@ var defaultModelFunc ModelFunc = func() Modeler {
 type query struct {
 	db           interface{}
 	filters      *Filters
-	dFilters     []dfilterlib.Filter
+	dFilters     []dfilter.Filter
 	dFilterTable string
 	joins        []join
 	modelFunc    ModelFunc
@@ -255,7 +254,7 @@ func (q *query) GetPage() (page int) {
 	return q.page
 }
 
-func (q *query) GetDynamicFilters() []dfilterlib.Filter {
+func (q *query) GetDynamicFilters() []dfilter.Filter {
 	return q.dFilters
 }
 
@@ -302,7 +301,7 @@ func (q *query) WithFilter(key string, value interface{}) QueryModel {
 	return q
 }
 
-func (q *query) WithDynamicFilters(filter []dfilterlib.Filter) QueryModel {
+func (q *query) WithDynamicFilters(filter []dfilter.Filter) QueryModel {
 	q.dFilters = filter
 	return q
 }
@@ -326,7 +325,7 @@ func (q *query) Clone() QueryModel {
 
 func (q *query) Flush() QueryModel {
 	q.filters = &Filters{}
-	q.dFilters = make([]dfilterlib.Filter, 0)
+	q.dFilters = make([]dfilter.Filter, 0)
 	q.joins = make([]join, 0)
 	q.extraActions = make(map[string]interface{})
 	q.body = nil
