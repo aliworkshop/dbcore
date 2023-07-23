@@ -1,6 +1,11 @@
 package dbcore
 
-type Filters map[string]interface{}
+type Filterable interface {
+	Add(key string, value any) Filterable
+	Get() Filters
+}
+
+type Filters map[string]any
 
 func (f *Filters) Add(key string, value interface{}) {
 	(*f)[key] = value
@@ -20,6 +25,25 @@ func (f *Filters) Extend(filters *Filters) {
 }
 
 type ExtraFilter struct {
-	Query  interface{}
-	Params []interface{}
+	Query  any
+	Params []any
+}
+
+type filterable struct {
+	filters Filters
+}
+
+func NewFilterable() Filterable {
+	return &filterable{
+		filters: map[string]any{},
+	}
+}
+
+func (f *filterable) Add(key string, value any) Filterable {
+	f.filters.Add(key, value)
+	return f
+}
+
+func (f *filterable) Get() Filters {
+	return f.filters
 }

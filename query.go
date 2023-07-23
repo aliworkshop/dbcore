@@ -9,10 +9,10 @@ type QueryModel interface {
 	GetDB() interface{}
 
 	Populate(request QueryModel) (populated QueryModel)
-	AddFilter(key string, value interface{})
-	GetFilter(key string) (value interface{})
-	GetFilters() Filters
-	RemoveFilter(key string)
+	AddFilter(Filterable)
+	AddOrFilter(Filterable)
+	GetFilters() []Filterable
+	GetOrFilters() []Filterable
 	AddSort(field string, order order)
 	GetSort() (sort []SortItem)
 	SetBody(body interface{})
@@ -37,7 +37,8 @@ type QueryModel interface {
 	WithExtraFilter(query string, params ...interface{}) QueryModel
 	WithPage(page int) QueryModel
 	WithPageSize(pageSize int) QueryModel
-	WithFilter(key string, value interface{}) QueryModel
+	WithFilter(Filterable) QueryModel
+	WithOrFilter(Filterable) QueryModel
 	WithDynamicFilters([]dfilter.Filter) QueryModel
 	GetDynamicFilters() []dfilter.Filter
 	WithSort(field string, order order) QueryModel
@@ -72,7 +73,8 @@ var defaultModelFunc ModelFunc = func() Modeler {
 
 type query struct {
 	db           interface{}
-	filters      *Filters
+	filters      []Filterable
+	orFilters    []Filterable
 	dFilters     []dfilter.Filter
 	dFilterTable string
 	joins        []join
@@ -146,26 +148,12 @@ func (q *query) Populate(request QueryModel) (populated QueryModel) {
 	return request
 }
 
-func (q *query) AddFilter(key string, value interface{}) {
-	if q.filters == nil {
-		q.filters = &Filters{}
-	}
-	q.filters.Add(key, value)
+func (q *query) AddFilter(filter Filterable) {
+	q.filters = append(q.filters, filter)
 }
 
-func (q *query) GetFilter(key string) (value interface{}) {
-	if q.filters == nil {
-		return
-	}
-	value, _ = (*q.filters)[key]
-	return
-}
-
-func (q *query) RemoveFilter(key string) {
-	if q.filters == nil {
-		return
-	}
-	q.filters.Delete(key)
+func (q *query) AddOrFilter(filter Filterable) {
+	q.orFilters = append(q.orFilters, filter)
 }
 
 func (q *query) SetBody(body interface{}) {
@@ -186,11 +174,12 @@ func (q *query) AddExtraFilter(filterQuery string, params ...interface{}) {
 	})
 }
 
-func (q *query) GetFilters() Filters {
-	if q.filters == nil {
-		return Filters{}
-	}
-	return *q.filters
+func (q *query) GetFilters() []Filterable {
+	return q.filters
+}
+
+func (q *query) GetOrFilters() []Filterable {
+	return q.orFilters
 }
 
 func (q *query) GetExtraFilters() (extraFilters []ExtraFilter) {
@@ -296,8 +285,13 @@ func (q *query) WithPageSize(pageSize int) QueryModel {
 	return q
 }
 
-func (q *query) WithFilter(key string, value interface{}) QueryModel {
-	q.AddFilter(key, value)
+func (q *query) WithFilter(filter Filterable) QueryModel {
+	q.AddFilter(filter)
+	return q
+}
+
+func (q *query) WithOrFilter(filter Filterable) QueryModel {
+	q.AddOrFilter(filter)
 	return q
 }
 
@@ -324,7 +318,6 @@ func (q *query) Clone() QueryModel {
 }
 
 func (q *query) Flush() QueryModel {
-	q.filters = &Filters{}
 	q.dFilters = make([]dfilter.Filter, 0)
 	q.joins = make([]join, 0)
 	q.extraActions = make(map[string]interface{})
