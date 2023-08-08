@@ -318,7 +318,10 @@ func (q *query) Clone() QueryModel {
 }
 
 func (q *query) Flush() QueryModel {
+	q.filters = make([]Filterable, 0)
+	q.orFilters = make([]Filterable, 0)
 	q.dFilters = make([]dfilter.Filter, 0)
+	q.dFilterTable = ""
 	q.joins = make([]join, 0)
 	q.extraActions = make(map[string]interface{})
 	q.body = nil
