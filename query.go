@@ -8,7 +8,6 @@ type QueryModel interface {
 	// GetDB get custom db, returns nil if db is not set
 	GetDB() interface{}
 
-	Populate(request QueryModel) (populated QueryModel)
 	AddFilter(Filterable)
 	AddOrFilter(Filterable)
 	GetFilters() []Filterable
@@ -20,7 +19,6 @@ type QueryModel interface {
 	AddExtraFilter(query string, params ...interface{})
 	GetExtraFilters() []ExtraFilter
 	WithJoin(query string, args ...interface{}) QueryModel
-	AddExtraAction(key string, action interface{})
 	GetModel() (instance Modeler)
 	SetModelFunc(func() Modeler)
 	SetTransaction(transaction interface{})
@@ -30,8 +28,7 @@ type QueryModel interface {
 	SetPage(page int)
 	GetPage() (page int)
 	GetJoin() []join
-	GetExtraActions() map[string]interface{}
-	// with
+
 	WithModelFunc(func() Modeler) QueryModel
 	WithBody(body interface{}) QueryModel
 	WithExtraFilter(query string, params ...interface{}) QueryModel
@@ -144,10 +141,6 @@ func (q *query) GetDB() interface{} {
 	return q.db
 }
 
-func (q *query) Populate(request QueryModel) (populated QueryModel) {
-	return request
-}
-
 func (q *query) AddFilter(filter Filterable) {
 	q.filters = append(q.filters, filter)
 }
@@ -245,17 +238,6 @@ func (q *query) GetPage() (page int) {
 
 func (q *query) GetDynamicFilters() []dfilter.Filter {
 	return q.dFilters
-}
-
-func (q *query) AddExtraAction(key string, action interface{}) {
-	if q.extraActions == nil {
-		q.extraActions = map[string]interface{}{}
-	}
-	q.extraActions[key] = action
-}
-
-func (q *query) GetExtraActions() map[string]interface{} {
-	return q.extraActions
 }
 
 // with
