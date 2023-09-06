@@ -7,7 +7,9 @@ import (
 )
 
 type Cache interface {
+	Initialize() error.ErrorModel
 	GetDB() any
+	Ping(ctx context.Context) error.ErrorModel
 
 	Store(ctx context.Context, key string, value any,
 		expiration ...time.Duration) error.ErrorModel
@@ -16,11 +18,8 @@ type Cache interface {
 	ListKeys(ctx context.Context, pattern string) ([]string, error.ErrorModel)
 	Fetch(ctx context.Context, key string) ([]byte, error.ErrorModel)
 	Load(ctx context.Context, key string, result any) error.ErrorModel
-	Count(ctx context.Context, pattern string) (int, error.ErrorModel)
-	CountItems(ctx context.Context, sourceKey string) (int, error.ErrorModel)
+	Count(ctx context.Context, pattern string) (uint64, error.ErrorModel)
+	Exists(ctx context.Context, key string) (bool, error.ErrorModel)
 	GetExpiration(ctx context.Context, key string) (time.Duration, error.ErrorModel)
 	Delete(ctx context.Context, key string) error.ErrorModel
-	DeleteItem(ctx context.Context, sourceKey string, id int64) error.ErrorModel
-
-	SetItem(ctx context.Context, key, id string, value any) error.ErrorModel
 }
