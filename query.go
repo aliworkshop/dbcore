@@ -4,9 +4,9 @@ import "github.com/aliworkshop/dfilter"
 
 type QueryModel interface {
 	// SetDB set custom db to query to use in further methods of db handler
-	SetDB(db interface{})
+	SetDB(db any)
 	// GetDB get custom db, returns nil if db is not set
-	GetDB() interface{}
+	GetDB() any
 
 	AddFilter(Filterable)
 	AddOrFilter(Filterable)
@@ -14,15 +14,15 @@ type QueryModel interface {
 	GetOrFilters() []Filterable
 	AddSort(field string, order order)
 	GetSort() (sort []SortItem)
-	SetBody(body interface{})
-	GetBody() (body interface{})
-	AddExtraFilter(query string, params ...interface{})
+	SetBody(body any)
+	GetBody() (body any)
+	AddExtraFilter(query string, params ...any)
 	GetExtraFilters() []ExtraFilter
-	WithJoin(query string, args ...interface{}) QueryModel
+	WithJoin(query string, args ...any) QueryModel
 	GetModel() (instance Modeler)
 	SetModelFunc(func() Modeler)
-	SetTransaction(transaction interface{})
-	GetTransaction() (transaction interface{})
+	SetTransaction(transaction any)
+	GetTransaction() (transaction any)
 	SetPageSize(pageSize int)
 	GetPageSize() int
 	SetPage(page int)
@@ -30,8 +30,8 @@ type QueryModel interface {
 	GetJoin() []join
 
 	WithModelFunc(func() Modeler) QueryModel
-	WithBody(body interface{}) QueryModel
-	WithExtraFilter(query string, params ...interface{}) QueryModel
+	WithBody(body any) QueryModel
+	WithExtraFilter(query string, params ...any) QueryModel
 	WithPage(page int) QueryModel
 	WithPageSize(pageSize int) QueryModel
 	WithFilter(Filterable) QueryModel
@@ -40,18 +40,19 @@ type QueryModel interface {
 	GetDynamicFilters() []dfilter.Filter
 	WithSort(field string, order order) QueryModel
 	WithSorts(sort ...SortItem) QueryModel
+	WithTransaction(transaction any) QueryModel
 	// Clone copy current query as new instance of query model
 	Clone() QueryModel
 	// Flush clears body and all filters existing in query and resets
 	// other properties. it removes everything except
 	// model/models and transaction
 	Flush() QueryModel
-	WithSelect(columns interface{}, args ...interface{}) QueryModel
+	WithSelect(columns any, args ...any) QueryModel
 	GetSelects() []Select
 	GetHint() *Hint
 	SetHint(hint Hint)
-	SetTable(name string, args ...interface{}) QueryModel
-	GetTable() (string, []interface{})
+	SetTable(name string, args ...any) QueryModel
+	GetTable() (string, []any)
 	WithGroupBy(field string) QueryModel
 	GetGroupBy() []string
 	SetDynamicFilterTable(string) QueryModel
@@ -64,43 +65,38 @@ var (
 
 type ModelFunc func() Modeler
 
-var defaultModelFunc ModelFunc = func() Modeler {
-	return nil
-}
-
 type query struct {
-	db           interface{}
+	db           any
 	filters      []Filterable
 	orFilters    []Filterable
 	dFilters     []dfilter.Filter
 	dFilterTable string
 	joins        []join
 	modelFunc    ModelFunc
-	modelsFunc   ModelFunc
-	transaction  interface{}
+	transaction  any
 	extraFilters []ExtraFilter
 	pageSize     int
 	page         int
 	sortItem     []SortItem
-	body         interface{}
-	extraActions map[string]interface{}
+	body         any
+	extraActions map[string]any
 	selects      []Select
 	hint         *Hint
 	table        struct {
 		name string
-		args []interface{}
+		args []any
 	}
 	groupBy []string
 }
 
 type Select struct {
-	Columns interface{}
-	Args    []interface{}
+	Columns any
+	Args    []any
 }
 
 type join struct {
 	Query string
-	Args  []interface{}
+	Args  []any
 }
 
 func NewQuery(existing ...QueryModel) QueryModel {
@@ -109,35 +105,32 @@ func NewQuery(existing ...QueryModel) QueryModel {
 		q, _ = existing[0].(*query)
 	}
 	if q == nil {
-		q = &query{
-			modelFunc:  defaultModelFunc,
-			modelsFunc: defaultModelFunc,
-		}
+		q = &query{}
 	}
 	q.joins = make([]join, 0)
 	q.filters = nil
 	return q
 }
 
-func IsQueryModel(model interface{}) bool {
+func IsQueryModel(model any) bool {
 	if _, ok := model.(*query); ok {
 		return ok
 	}
 	return false
 }
 
-func GetQueryModel(model interface{}) QueryModel {
+func GetQueryModel(model any) QueryModel {
 	if q, ok := model.(*query); ok {
 		return q
 	}
 	return nil
 }
 
-func (q *query) SetDB(db interface{}) {
+func (q *query) SetDB(db any) {
 	q.db = db
 }
 
-func (q *query) GetDB() interface{} {
+func (q *query) GetDB() any {
 	return q.db
 }
 
@@ -149,15 +142,15 @@ func (q *query) AddOrFilter(filter Filterable) {
 	q.orFilters = append(q.orFilters, filter)
 }
 
-func (q *query) SetBody(body interface{}) {
+func (q *query) SetBody(body any) {
 	q.body = body
 }
 
-func (q *query) GetBody() (body interface{}) {
+func (q *query) GetBody() (body any) {
 	return q.body
 }
 
-func (q *query) AddExtraFilter(filterQuery string, params ...interface{}) {
+func (q *query) AddExtraFilter(filterQuery string, params ...any) {
 	if q.extraFilters == nil {
 		q.extraFilters = []ExtraFilter{}
 	}
@@ -179,7 +172,7 @@ func (q *query) GetExtraFilters() (extraFilters []ExtraFilter) {
 	return q.extraFilters
 }
 
-func (q *query) WithJoin(query string, args ...interface{}) QueryModel {
+func (q *query) WithJoin(query string, args ...any) QueryModel {
 	q.joins = append(q.joins, join{Query: query, Args: args})
 	return q
 }
@@ -196,11 +189,11 @@ func (q *query) SetModelFunc(modelFunc func() Modeler) {
 	q.modelFunc = modelFunc
 }
 
-func (q *query) SetTransaction(transaction interface{}) {
+func (q *query) SetTransaction(transaction any) {
 	q.transaction = transaction
 }
 
-func (q *query) GetTransaction() (transaction interface{}) {
+func (q *query) GetTransaction() (transaction any) {
 	return q.transaction
 }
 
@@ -247,12 +240,12 @@ func (q *query) WithModelFunc(f func() Modeler) QueryModel {
 	return q
 }
 
-func (q *query) WithBody(body interface{}) QueryModel {
+func (q *query) WithBody(body any) QueryModel {
 	q.SetBody(body)
 	return q
 }
 
-func (q *query) WithExtraFilter(query string, params ...interface{}) QueryModel {
+func (q *query) WithExtraFilter(query string, params ...any) QueryModel {
 	q.AddExtraFilter(query, params...)
 	return q
 }
@@ -294,6 +287,11 @@ func (q *query) WithSorts(sort ...SortItem) QueryModel {
 	return q
 }
 
+func (q *query) WithTransaction(transaction any) QueryModel {
+	q.transaction = transaction
+	return q
+}
+
 func (q *query) Clone() QueryModel {
 	var cloned = *q
 	return &cloned
@@ -305,14 +303,14 @@ func (q *query) Flush() QueryModel {
 	q.dFilters = make([]dfilter.Filter, 0)
 	q.dFilterTable = ""
 	q.joins = make([]join, 0)
-	q.extraActions = make(map[string]interface{})
+	q.extraActions = make(map[string]any)
 	q.body = nil
 	q.page = 0
 	q.pageSize = 0
 	return q
 }
 
-func (q *query) WithSelect(columns interface{}, args ...interface{}) QueryModel {
+func (q *query) WithSelect(columns any, args ...any) QueryModel {
 	q.selects = append(q.selects, Select{Columns: columns, Args: args})
 	return q
 }
@@ -329,13 +327,13 @@ func (q *query) SetHint(hint Hint) {
 	q.hint = &hint
 }
 
-func (q *query) SetTable(name string, args ...interface{}) QueryModel {
+func (q *query) SetTable(name string, args ...any) QueryModel {
 	q.table.name = name
 	q.table.args = args
 	return q
 }
 
-func (q *query) GetTable() (string, []interface{}) {
+func (q *query) GetTable() (string, []any) {
 	return q.table.name, q.table.args
 }
 
