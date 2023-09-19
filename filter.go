@@ -1,49 +1,59 @@
 package dbcore
 
-type Filterable interface {
-	Add(key string, value any) Filterable
-	Get() Filters
+type Operation string
+
+const (
+	And Operation = "and"
+	Or            = "or"
+)
+
+type Filter interface {
+	GetMatches() []*Match
+	GetOperation() Operation
+	WithMatch(match *Match) Filter
+	WithId(value any) Filter
 }
 
-type Filters map[string]any
-
-func (f *Filters) Add(key string, value interface{}) {
-	(*f)[key] = value
+type filter struct {
+	operation Operation
+	matches   []*Match
 }
 
-func (f *Filters) Delete(key string) {
-	delete(*f, key)
+type Match struct {
+	Key      string
+	Value    any
+	Operator Operator
 }
 
-func (f *Filters) Extend(filters *Filters) {
-	if filters == nil {
-		return
+func NewFilter(operation Operation) Filter {
+	return &filter{
+		operation: operation,
 	}
-	for key, value := range *filters {
-		f.Add(key, value)
-	}
+}
+
+func (f *filter) GetMatches() []*Match {
+	return f.matches
+}
+
+func (f *filter) GetOperation() Operation {
+	return f.operation
+}
+
+func (f *filter) WithMatch(match *Match) Filter {
+	f.matches = append(f.matches, match)
+	return f
+}
+
+func (f *filter) WithId(value any) Filter {
+	f.matches = append(f.matches, &Match{
+		Key:      "id",
+		Value:    value,
+		Operator: Equal,
+	})
+	return f
 }
 
 type ExtraFilter struct {
 	Query  any
 	Params []any
-}
-
-type filterable struct {
-	filters Filters
-}
-
-func NewFilterable() Filterable {
-	return &filterable{
-		filters: map[string]any{},
-	}
-}
-
-func (f *filterable) Add(key string, value any) Filterable {
-	f.filters.Add(key, value)
-	return f
-}
-
-func (f *filterable) Get() Filters {
-	return f.filters
 }

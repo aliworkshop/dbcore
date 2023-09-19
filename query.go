@@ -8,10 +8,8 @@ type QueryModel interface {
 	// GetDB get custom db, returns nil if db is not set
 	GetDB() any
 
-	AddFilter(Filterable)
-	AddOrFilter(Filterable)
-	GetFilters() []Filterable
-	GetOrFilters() []Filterable
+	AddFilter(Filter)
+	GetFilters() []Filter
 	AddSort(field string, order order)
 	GetSort() (sort []SortItem)
 	SetBody(body any)
@@ -34,8 +32,7 @@ type QueryModel interface {
 	WithExtraFilter(query string, params ...any) QueryModel
 	WithPage(page int) QueryModel
 	WithPageSize(pageSize int) QueryModel
-	WithFilter(Filterable) QueryModel
-	WithOrFilter(Filterable) QueryModel
+	WithFilter(Filter) QueryModel
 	WithDynamicFilters([]dfilter.Filter) QueryModel
 	GetDynamicFilters() []dfilter.Filter
 	WithSort(field string, order order) QueryModel
@@ -67,8 +64,7 @@ type ModelFunc func() Modeler
 
 type query struct {
 	db           any
-	filters      []Filterable
-	orFilters    []Filterable
+	filters      []Filter
 	dFilters     []dfilter.Filter
 	dFilterTable string
 	joins        []join
@@ -134,12 +130,8 @@ func (q *query) GetDB() any {
 	return q.db
 }
 
-func (q *query) AddFilter(filter Filterable) {
+func (q *query) AddFilter(filter Filter) {
 	q.filters = append(q.filters, filter)
-}
-
-func (q *query) AddOrFilter(filter Filterable) {
-	q.orFilters = append(q.orFilters, filter)
 }
 
 func (q *query) SetBody(body any) {
@@ -160,12 +152,8 @@ func (q *query) AddExtraFilter(filterQuery string, params ...any) {
 	})
 }
 
-func (q *query) GetFilters() []Filterable {
+func (q *query) GetFilters() []Filter {
 	return q.filters
-}
-
-func (q *query) GetOrFilters() []Filterable {
-	return q.orFilters
 }
 
 func (q *query) GetExtraFilters() (extraFilters []ExtraFilter) {
@@ -260,13 +248,8 @@ func (q *query) WithPageSize(pageSize int) QueryModel {
 	return q
 }
 
-func (q *query) WithFilter(filter Filterable) QueryModel {
+func (q *query) WithFilter(filter Filter) QueryModel {
 	q.AddFilter(filter)
-	return q
-}
-
-func (q *query) WithOrFilter(filter Filterable) QueryModel {
-	q.AddOrFilter(filter)
 	return q
 }
 
@@ -298,8 +281,7 @@ func (q *query) Clone() QueryModel {
 }
 
 func (q *query) Flush() QueryModel {
-	q.filters = make([]Filterable, 0)
-	q.orFilters = make([]Filterable, 0)
+	q.filters = make([]Filter, 0)
 	q.dFilters = make([]dfilter.Filter, 0)
 	q.dFilterTable = ""
 	q.joins = make([]join, 0)
