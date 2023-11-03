@@ -13,6 +13,7 @@ type Filter interface {
 	WithAndMatch(match ...*Match) Filter
 	WithOrMatch(match ...*Match) Filter
 	WithId(value any) Filter
+	WithUuid(value any) Filter
 }
 
 type filter struct {
@@ -64,6 +65,15 @@ func (f *filter) WithOrMatch(match ...*Match) Filter {
 func (f *filter) WithId(value any) Filter {
 	f.matches = append(f.matches, &Match{
 		Key:      "id",
+		Value:    value,
+		Operator: Equal,
+	})
+	return f
+}
+
+func (f *filter) WithUuid(value any) Filter {
+	f.matches = append(f.matches, &Match{
+		Key:      "uuid",
 		Value:    value,
 		Operator: Equal,
 	})
