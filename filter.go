@@ -12,6 +12,8 @@ type Filter interface {
 	GetOperation() Operation
 	WithAndMatch(match ...*Match) Filter
 	WithOrMatch(match ...*Match) Filter
+	WithId(value any, op ...Operation) Filter
+	WithUuid(value any, op ...Operation) Filter
 }
 
 type filter struct {
@@ -60,20 +62,32 @@ func (f *filter) WithOrMatch(match ...*Match) Filter {
 	return f
 }
 
-func WithId(value any) Match {
-	return Match{
+func (f *filter) WithId(value any, operation ...Operation) Filter {
+	op := And
+	if len(operation) > 0 {
+		op = operation[0]
+	}
+	f.matches = append(f.matches, &Match{
 		Key:      "id",
 		Value:    value,
 		Operator: Equal,
-	}
+		Op:       op,
+	})
+	return f
 }
 
-func WithUuid(value any) Match {
-	return Match{
+func (f *filter) WithUuid(value any, operation ...Operation) Filter {
+	op := And
+	if len(operation) > 0 {
+		op = operation[0]
+	}
+	f.matches = append(f.matches, &Match{
 		Key:      "uuid",
 		Value:    value,
 		Operator: Equal,
-	}
+		Op:       op,
+	})
+	return f
 }
 
 type ExtraFilter struct {
