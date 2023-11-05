@@ -1,6 +1,9 @@
 package dbcore
 
-import "github.com/aliworkshop/dfilter"
+import (
+	"github.com/aliworkshop/dfilter"
+	"sync"
+)
 
 type QueryModel interface {
 	// SetDB set custom db to query to use in further methods of db handler
@@ -54,6 +57,9 @@ type QueryModel interface {
 	GetGroupBy() []string
 	SetDynamicFilterTable(string) QueryModel
 	GetDynamicFilterTable() string
+
+	SetTemp(key string, value any)
+	GetTemp(key string) any
 }
 
 var (
@@ -83,6 +89,9 @@ type query struct {
 		args []any
 	}
 	groupBy []string
+
+	temp    map[string]any
+	tempMtx *sync.Mutex
 }
 
 type Select struct {
@@ -101,7 +110,10 @@ func NewQuery(existing ...QueryModel) QueryModel {
 		q, _ = existing[0].(*query)
 	}
 	if q == nil {
-		q = &query{}
+		q = &query{
+			temp:    make(map[string]any),
+			tempMtx: new(sync.Mutex),
+		}
 	}
 	q.joins = make([]join, 0)
 	q.filters = nil
@@ -289,6 +301,7 @@ func (q *query) Flush() QueryModel {
 	q.body = nil
 	q.page = 0
 	q.pageSize = 0
+	q.temp = make(map[string]any)
 	return q
 }
 
@@ -335,4 +348,17 @@ func (q *query) SetDynamicFilterTable(table string) QueryModel {
 
 func (q *query) GetDynamicFilterTable() string {
 	return q.dFilterTable
+}
+
+func (q *query) SetTemp(key string, value any) {
+	q.tempMtx.Lock()
+	q.temp[key] = value
+	q.tempMtx.Unlock()
+}
+
+func (q *query) GetTemp(key string) any {
+	q.tempMtx.Lock()
+	temp, _ := q.temp[key]
+	q.tempMtx.Unlock()
+	return temp
 }
