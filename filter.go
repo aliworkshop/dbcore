@@ -48,6 +48,9 @@ func (f *filter) GetOperation() Operation {
 
 func (f *filter) WithAndMatch(match ...*Match) Filter {
 	for _, m := range match {
+		if len(m.Operator.String()) == 0 {
+			m.Operator = Equal
+		}
 		m.Op = And
 		f.matches = append(f.matches, m)
 	}
@@ -56,6 +59,9 @@ func (f *filter) WithAndMatch(match ...*Match) Filter {
 
 func (f *filter) WithOrMatch(match ...*Match) Filter {
 	for _, m := range match {
+		if len(m.Operator.String()) == 0 {
+			m.Operator = Equal
+		}
 		m.Op = OR
 		f.matches = append(f.matches, m)
 	}
