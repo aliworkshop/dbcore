@@ -14,7 +14,7 @@ type QueryModel interface {
 	AddFilter(Filter)
 	GetFilters() []Filter
 	AddSort(field string, order order)
-	GetSort() (sort []SortItem)
+	GetSort() (sort map[string]SortItem)
 	SetBody(body any)
 	GetBody() (body any)
 	AddExtraFilter(query string, params ...any)
@@ -79,7 +79,7 @@ type query struct {
 	extraFilters []ExtraFilter
 	pageSize     int
 	page         int
-	sortItem     []SortItem
+	sortItem     map[string]SortItem
 	body         any
 	extraActions map[string]any
 	selects      []Select
@@ -111,8 +111,9 @@ func NewQuery(existing ...QueryModel) QueryModel {
 	}
 	if q == nil {
 		q = &query{
-			temp:    make(map[string]any),
-			tempMtx: new(sync.Mutex),
+			temp:     make(map[string]any),
+			tempMtx:  new(sync.Mutex),
+			sortItem: make(map[string]SortItem),
 		}
 	}
 	q.joins = make([]join, 0)
@@ -198,10 +199,10 @@ func (q *query) GetTransaction() (transaction any) {
 }
 
 func (q *query) AddSort(field string, order order) {
-	q.sortItem = append(q.sortItem, SortItem{field, order})
+	q.sortItem[field] = SortItem{Field: field, Order: order}
 }
 
-func (q *query) GetSort() []SortItem {
+func (q *query) GetSort() map[string]SortItem {
 	return q.sortItem
 }
 
@@ -277,7 +278,9 @@ func (q *query) WithSort(field string, order order) QueryModel {
 
 func (q *query) WithSorts(sort ...SortItem) QueryModel {
 	for _, sortItem := range sort {
-		q.sortItem = append(q.sortItem, sortItem)
+		if _, ok := q.sortItem[sortItem.Field]; !ok {
+			q.sortItem[sortItem.Field] = sortItem
+		}
 	}
 	return q
 }

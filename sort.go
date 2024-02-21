@@ -28,8 +28,9 @@ func (o order) IsDescending() bool {
 }
 
 type SortItem struct {
-	Field string
-	Order order
+	Field       string
+	Order       order
+	ReplaceWith string
 }
 
 func ParseSort(sort string) []SortItem {
