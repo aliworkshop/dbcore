@@ -17,6 +17,7 @@ type QueryModel interface {
 	GetSort() (sort map[string]SortItem)
 	SetBody(body any)
 	GetBody() (body any)
+	GetQuery() string
 	AddExtraFilter(query string, params ...any)
 	GetExtraFilters() []ExtraFilter
 	WithJoin(query string, args ...any) QueryModel
@@ -32,6 +33,7 @@ type QueryModel interface {
 
 	WithModelFunc(func() Modeler) QueryModel
 	WithBody(body any) QueryModel
+	WithQuery(query string) QueryModel
 	WithExtraFilter(query string, params ...any) QueryModel
 	WithPage(page int) QueryModel
 	WithPageSize(pageSize int) QueryModel
@@ -81,6 +83,7 @@ type query struct {
 	page         int
 	sortItem     map[string]SortItem
 	body         any
+	query        string
 	extraActions map[string]any
 	selects      []Select
 	hint         *Hint
@@ -364,4 +367,13 @@ func (q *query) GetTemp(key string) any {
 	temp, _ := q.temp[key]
 	q.tempMtx.Unlock()
 	return temp
+}
+
+func (q *query) GetQuery() string {
+	return q.query
+}
+
+func (q *query) WithQuery(query string) QueryModel {
+	q.query = query
+	return q
 }
