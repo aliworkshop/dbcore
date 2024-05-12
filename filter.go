@@ -22,6 +22,7 @@ type filter struct {
 }
 
 type Match struct {
+	ElBoost  float32
 	Key      string
 	Value    any
 	Operator Operator
@@ -51,6 +52,9 @@ func (f *filter) WithAndMatch(match ...*Match) Filter {
 		if len(m.Operator.String()) == 0 {
 			m.Operator = Equal
 		}
+		if m.ElBoost == 0 {
+			m.ElBoost = 1
+		}
 		m.Op = And
 		f.matches = append(f.matches, m)
 	}
@@ -61,6 +65,9 @@ func (f *filter) WithOrMatch(match ...*Match) Filter {
 	for _, m := range match {
 		if len(m.Operator.String()) == 0 {
 			m.Operator = Equal
+		}
+		if m.ElBoost == 0 {
+			m.ElBoost = 1
 		}
 		m.Op = OR
 		f.matches = append(f.matches, m)
