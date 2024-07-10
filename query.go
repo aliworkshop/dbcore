@@ -117,6 +117,9 @@ func NewQuery(existing ...QueryModel) QueryModel {
 			temp:     make(map[string]any),
 			tempMtx:  new(sync.Mutex),
 			sortItem: make(map[string]SortItem),
+			modelFunc: func() Modeler {
+				return nil
+			},
 		}
 	}
 	q.joins = make([]join, 0)
