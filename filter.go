@@ -5,6 +5,7 @@ type Operation string
 const (
 	And Operation = "AND"
 	OR            = "OR"
+	Not           = "Not"
 )
 
 type Filter interface {
@@ -14,6 +15,7 @@ type Filter interface {
 	WithOrMatch(match ...*Match) Filter
 	WithId(value any, op ...Operation) Filter
 	WithUuid(value any, op ...Operation) Filter
+	WithUid(value any, op ...Operation) Filter
 }
 
 type filter struct {
@@ -96,6 +98,20 @@ func (f *filter) WithUuid(value any, operation ...Operation) Filter {
 	}
 	f.matches = append(f.matches, &Match{
 		Key:      "uuid",
+		Value:    value,
+		Operator: Equal,
+		Op:       op,
+	})
+	return f
+}
+
+func (f *filter) WithUid(value any, operation ...Operation) Filter {
+	op := And
+	if len(operation) > 0 {
+		op = operation[0]
+	}
+	f.matches = append(f.matches, &Match{
+		Key:      "uid",
 		Value:    value,
 		Operator: Equal,
 		Op:       op,
