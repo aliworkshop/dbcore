@@ -1,6 +1,7 @@
 package dbcore
 
 import (
+	"context"
 	"github.com/aliworkshop/dfilter"
 	"sync"
 )
@@ -17,7 +18,7 @@ type QueryModel interface {
 	GetSort() (sort map[string]SortItem)
 	SetBody(body any)
 	GetBody() (body any)
-	GetQuery() string
+	GetQuery() (string, []any)
 	AddExtraFilter(query string, params ...any)
 	GetExtraFilters() []ExtraFilter
 	WithJoin(query string, args ...any) QueryModel
@@ -30,10 +31,11 @@ type QueryModel interface {
 	SetPage(page int)
 	GetPage() (page int)
 	GetJoin() []join
+	GetContext() context.Context
 
 	WithModelFunc(func() Modeler) QueryModel
 	WithBody(body any) QueryModel
-	WithQuery(query string) QueryModel
+	WithQuery(name string, args ...any) QueryModel
 	WithExtraFilter(query string, params ...any) QueryModel
 	WithPage(page int) QueryModel
 	WithPageSize(pageSize int) QueryModel
@@ -43,6 +45,7 @@ type QueryModel interface {
 	WithSort(field string, order order) QueryModel
 	WithSorts(sort ...SortItem) QueryModel
 	WithTransaction(transaction any) QueryModel
+	WithContext(ctx context.Context) QueryModel
 	// Clone copy current query as new instance of query model
 	Clone() QueryModel
 	// Flush clears body and all filters existing in query and resets
@@ -51,17 +54,22 @@ type QueryModel interface {
 	Flush() QueryModel
 	WithSelect(columns any, args ...any) QueryModel
 	GetSelects() []Select
-	GetHint() *Hint
-	SetHint(hint Hint)
 	SetTable(name string, args ...any) QueryModel
 	GetTable() (string, []any)
 	WithGroupBy(field string) QueryModel
 	GetGroupBy() []string
 	SetDynamicFilterTable(string) QueryModel
 	GetDynamicFilterTable() string
+	WithPreload(relation string, args ...any) QueryModel
+	GetPreloads() []preload
+	ReplaceWith(find, replace string) QueryModel
+	GetReplaces() map[string]string
 
 	SetTemp(key string, value any)
 	GetTemp(key string) any
+
+	IncludeSoftDeleted() QueryModel
+	IsUnscoped() bool
 }
 
 var (
@@ -72,6 +80,7 @@ type ModelFunc func() Modeler
 
 type query struct {
 	db           any
+	ctx          context.Context
 	filters      []Filter
 	dFilters     []dfilter.Filter
 	dFilterTable string
@@ -83,18 +92,24 @@ type query struct {
 	page         int
 	sortItem     map[string]SortItem
 	body         any
-	query        string
+	query        struct {
+		name string
+		args []any
+	}
 	extraActions map[string]any
 	selects      []Select
-	hint         *Hint
 	table        struct {
 		name string
 		args []any
 	}
-	groupBy []string
+	groupBy  []string
+	preload  []preload
+	replacer map[string]string
 
 	temp    map[string]any
 	tempMtx *sync.Mutex
+
+	unscoped bool
 }
 
 type Select struct {
@@ -105,6 +120,11 @@ type Select struct {
 type join struct {
 	Query string
 	Args  []any
+}
+
+type preload struct {
+	Preload string
+	Args    []any
 }
 
 func NewQuery(existing ...QueryModel) QueryModel {
@@ -120,6 +140,7 @@ func NewQuery(existing ...QueryModel) QueryModel {
 			modelFunc: func() Modeler {
 				return nil
 			},
+			replacer: make(map[string]string),
 		}
 	}
 	q.joins = make([]join, 0)
@@ -240,6 +261,13 @@ func (q *query) GetDynamicFilters() []dfilter.Filter {
 	return q.dFilters
 }
 
+func (q *query) GetContext() context.Context {
+	if q.ctx != nil {
+		return q.ctx
+	}
+	return context.Background()
+}
+
 // with
 
 func (q *query) WithModelFunc(f func() Modeler) QueryModel {
@@ -296,6 +324,11 @@ func (q *query) WithTransaction(transaction any) QueryModel {
 	return q
 }
 
+func (q *query) WithContext(ctx context.Context) QueryModel {
+	q.ctx = ctx
+	return q
+}
+
 func (q *query) Clone() QueryModel {
 	var cloned = *q
 	return &cloned
@@ -311,6 +344,8 @@ func (q *query) Flush() QueryModel {
 	q.page = 0
 	q.pageSize = 0
 	q.temp = make(map[string]any)
+	q.groupBy = make([]string, 0)
+	q.preload = make([]preload, 0)
 	return q
 }
 
@@ -321,14 +356,6 @@ func (q *query) WithSelect(columns any, args ...any) QueryModel {
 
 func (q *query) GetSelects() []Select {
 	return q.selects
-}
-
-func (q *query) GetHint() *Hint {
-	return q.hint
-}
-
-func (q *query) SetHint(hint Hint) {
-	q.hint = &hint
 }
 
 func (q *query) SetTable(name string, args ...any) QueryModel {
@@ -372,11 +399,39 @@ func (q *query) GetTemp(key string) any {
 	return temp
 }
 
-func (q *query) GetQuery() string {
-	return q.query
+func (q *query) GetQuery() (string, []any) {
+	return q.query.name, q.query.args
 }
 
-func (q *query) WithQuery(query string) QueryModel {
-	q.query = query
+func (q *query) WithQuery(query string, args ...any) QueryModel {
+	q.query.name = query
+	q.query.args = args
 	return q
+}
+
+func (q *query) WithPreload(relation string, args ...any) QueryModel {
+	q.preload = append(q.preload, preload{Preload: relation, Args: args})
+	return q
+}
+
+func (q *query) GetPreloads() []preload {
+	return q.preload
+}
+
+func (q *query) ReplaceWith(find, replace string) QueryModel {
+	q.replacer[find] = replace
+	return q
+}
+
+func (q *query) GetReplaces() map[string]string {
+	return q.replacer
+}
+
+func (q *query) IncludeSoftDeleted() QueryModel {
+	q.unscoped = true
+	return q
+}
+
+func (q *query) IsUnscoped() bool {
+	return q.unscoped
 }
