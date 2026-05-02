@@ -2,23 +2,23 @@ package dbcore
 
 import (
 	"context"
-	"github.com/aliworkshop/error"
+	"github.com/aliworkshop/errors"
 )
 
 type Repository interface {
-	Initialize() error.ErrorModel
+	Initialize() errors.ErrorModel
 	DB() any
-	Ping(ctx context.Context) error.ErrorModel
+	Ping(ctx context.Context) errors.ErrorModel
 
-	Count(query QueryModel) (count uint64, err error.ErrorModel)
-	CountWithDFilter(query QueryModel) (count uint64, err error.ErrorModel)
-	List(query QueryModel) (items interface{}, err error.ErrorModel)
-	ListWithDFilter(query QueryModel) (items interface{}, err error.ErrorModel)
-	Get(query QueryModel) (item interface{}, err error.ErrorModel)
-	Exist(query QueryModel) (exists bool, err error.ErrorModel)
+	Count(query QueryModel) (count uint64, err errors.ErrorModel)
+	CountWithDFilter(query QueryModel) (count uint64, err errors.ErrorModel)
+	List(query QueryModel) (items interface{}, err errors.ErrorModel)
+	ListWithDFilter(query QueryModel) (items interface{}, err errors.ErrorModel)
+	Get(query QueryModel) (item interface{}, err errors.ErrorModel)
+	Exist(query QueryModel) (exists bool, err errors.ErrorModel)
 
-	Insert(query QueryModel) (result interface{}, err error.ErrorModel)
-	Upsert(query QueryModel) (err error.ErrorModel)
-	Update(query QueryModel) (err error.ErrorModel)
-	Delete(query QueryModel) (err error.ErrorModel)
+	Insert(query QueryModel) (result interface{}, err errors.ErrorModel)
+	Upsert(query QueryModel) (err errors.ErrorModel)
+	Update(query QueryModel) (err errors.ErrorModel)
+	Delete(query QueryModel) (err errors.ErrorModel)
 }

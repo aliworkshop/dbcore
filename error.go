@@ -1,6 +1,6 @@
 package dbcore
 
-import "github.com/aliworkshop/error"
+import "github.com/aliworkshop/errors"
 
-var NotFoundErr = error.NotFound(nil).WithCode(404)
-var NotEnoughParams = error.Validation(nil).WithCode(422)
+var NotFoundErr = errors.NotFound(nil).WithCode(404)
+var NotEnoughParams = errors.Validation(nil).WithCode(422)

@@ -2,7 +2,8 @@ package dbcore
 
 import (
 	"context"
-	errors "github.com/aliworkshop/error"
+	"github.com/aliworkshop/errors"
+	"github.com/redis/go-redis/v9"
 	"time"
 )
 
