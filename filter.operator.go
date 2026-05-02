@@ -13,6 +13,7 @@ const (
 	Is
 	IsNot
 	NotIn
+	Ct
 )
 
 func (o Operator) String() string {
@@ -37,6 +38,8 @@ func (o Operator) String() string {
 		return "IS NOT"
 	case NotIn:
 		return "NOT IN"
+	case Ct:
+		return "LIKE"
 	default:
 		return ""
 	}
