@@ -14,4 +14,5 @@ type Transaction interface {
 	// If err is not nil, tries to rollback transaction and returns error
 	// Otherwise tries to commit transaction and return err if there is any
 	FinalizeTransaction(ctx context.Context, query QueryModel, err errors.ErrorModel) errors.ErrorModel
+	RunInTransaction(ctx context.Context, fn func(QueryModel) errors.ErrorModel, label string) errors.ErrorModel
 }
